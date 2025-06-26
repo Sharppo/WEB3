@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mint NFT - Web3</title>
+</head>
+<body>
+  <h1>Mint NFT Mobil</h1>
+  <button id="connectBtn">Connect Wallet</button>
+  <p id="walletAddress"></p>
+  <button id="mintBtn">Mint NFT</button>
+
+  <!-- Ethers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.2/dist/ethers.umd.min.js"></script>
+
+  <script>
+    const contractAddress = "0x6B847cA2D83764A3e63735a970225071163697Cf";
+
+    const contractABI = [
+      {
+        "inputs": [
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "string", "name": "uri", "type": "string" }
+        ],
+        "name": "safeMint",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    let currentAccount;
+
+    // Connect wallet
+    document.getElementById("connectBtn").onclick = async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          currentAccount = accounts[0];
+          document.getElementById("walletAddress").innerText = "Connected: " + currentAccount;
+        } catch (err) {
+          alert("❌ Gagal connect: " + err.message);
+        }
+      } else {
+        alert("⚠️ Install MetaMask dulu!");
+      }
+    };
+
+    // Mint NFT
+    document.getElementById("mintBtn").onclick = async () => {
+      if (!window.ethereum) {
+        alert("⚠️ MetaMask belum terpasang.");
+        return;
+      }
+
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);
+        const userAddress = await signer.getAddress();
+
+        const tokenURI = "https://ipfs.io/ipfs/bafkreid6w4bfowj5ubxwqkr53wsuvhjgbvh4kfhwiurx6xfhjmeprwtbuy";
+
+        const tx = await contract.safeMint(userAddress, tokenURI);
+        await tx.wait();
+
+        alert("✅ NFT berhasil di-mint ke alamat: " + userAddress);
+      } catch (error) {
+        console.error(error);
+        alert("❌ Gagal mint NFT: " + (error?.message || error));
+      }
+    };
+  </script>
+</body>
+</html>
