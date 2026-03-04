@@ -1,0 +1,36 @@
+async function analyzeData() {
+    const urlInput = document.getElementById('urlInput').value;
+    const btn = document.getElementById('btnText');
+    const resultDiv = document.getElementById('result');
+
+    if(!urlInput) return alert('Isi dulu URL-nya!');
+
+    btn.innerText = "PENETRATING...";
+    btn.disabled = true;
+
+    try {
+        // Ganti URL ini kalau lo udah deploy ke Render/Railway
+        const response = await fetch(`http://localhost:5000/api/analyze?url=${encodeURIComponent(urlInput)}`);
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.style.display = 'block';
+            document.getElementById('authorName').innerText = `@${data.author.uniqueId}`;
+            document.getElementById('videoDesc').innerText = data.title;
+            document.getElementById('valLikes').innerText = Intl.NumberFormat('en-US', { notation: 'compact' }).format(data.stats.likes);
+            document.getElementById('valViews').innerText = Intl.NumberFormat('en-US', { notation: 'compact' }).format(data.stats.views);
+            document.getElementById('valComments').innerText = data.stats.comments;
+            
+            // Hitung Engagement Rate
+            const er = ((data.stats.likes + data.stats.comments + data.stats.shares) / data.stats.views * 100).toFixed(2);
+            document.getElementById('valER').innerText = er + '%';
+        } else {
+            alert('Gagal ambil data. Coba lagi.');
+        }
+    } catch (e) {
+        alert('Server Error!');
+    } finally {
+        btn.innerText = "Analyze Metadata";
+        btn.disabled = false;
+    }
+}
